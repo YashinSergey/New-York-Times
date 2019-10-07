@@ -10,6 +10,10 @@ import android.widget.Toast;
 
 import com.example.newyorktimes.network.NewsModel;
 
+import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -28,23 +32,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateWeatherData() {
-        NetworkService
-                .getNetworkService()
-                .getAPI()
-                .loadNews(getString(R.string.api_key))
-                .enqueue(new Callback<NewsModel>() {
+        NetworkService.getNetworkService().getAPI().loadNews(getString(R.string.api_key)).retry(3)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new SingleObserver<NewsModel>() {
                     @Override
-                    public void onResponse(@NonNull Call<NewsModel> call,
-                                           @NonNull Response<NewsModel> response) {
-                        if (response.body() != null && response.isSuccessful()) {
-                            renderData(response.body());
-                        }
+                    public void onSubscribe(Disposable d) {}
+
+                    @Override
+                    public void onSuccess(NewsModel newsModel) {
+                        renderData(newsModel);
                     }
+
                     @Override
-                    public void onFailure(@NonNull Call<NewsModel> call, @NonNull Throwable t) {
-                        Toast.makeText(getApplicationContext(), "Network error",
-                                Toast.LENGTH_SHORT).show();
-                        Log.e("RESPONSE", "Network error");
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
                     }
                 });
     }
