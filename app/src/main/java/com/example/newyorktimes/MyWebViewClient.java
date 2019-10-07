@@ -1,4 +1,4 @@
-package com.example.newyorktimes.webView;
+package com.example.newyorktimes;
 
 
 import android.webkit.WebView;
